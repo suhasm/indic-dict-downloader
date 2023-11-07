@@ -35,9 +35,19 @@ while IFS= read -r md_url; do
         raw_file_url=$(echo $file_url | sed 's/github\.com\/indic-dict\/stardict-sanskrit\/raw/raw.githubusercontent.com\/indic-dict\/stardict-sanskrit/')
         # Extract the file name from the URL
         file_name=$(basename "$raw_file_url")
-        echo "Downloading $file_name to $dir"
+        # Create a directory for the tar file
+        file_dir="$dir/${file_name%.tar.gz}"
+        mkdir -p "$file_dir"
+        echo "Downloading $file_name to $file_dir"
         # Download the file and store it in the specified directory, overwriting if it exists
-        curl -L "$raw_file_url" -o "$dir/$file_name"
+        curl -L "$raw_file_url" -o "$file_dir/$file_name"
+
+        echo "Unzipping $file_name..."
+        # Unzip the file into its own directory and then delete the archive
+        tar -xzf "$file_dir/$file_name" -C "$file_dir"
+        rm "$file_dir/$file_name"
+
+        echo "$file_name unzipped and removed."
     done < file_links.txt
 done < md_links.txt
 
@@ -45,4 +55,4 @@ echo "Cleaning up temporary files..."
 # Clean up
 rm md_links.txt file_links.txt
 
-echo "Script completed. Files are downloaded to '$dir'."
+echo "Script completed. Files are downloaded and unzipped in '$dir'."
